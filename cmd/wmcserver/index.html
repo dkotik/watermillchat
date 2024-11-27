@@ -2,13 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>{{ .Title }}</title>
+    <title data-text="$title">{{ .Title }}</title>
     <script type="module" src="/datastar.js"></script>
   </head>
-  <body>
+  <body data-store="{title: 'test title'}" data-on-load="$get('/events.html')">
     <input data-model="input" type="text" />
     <div data-text="$input">
       I will get replaced with the contents of the input signal
     </div>
+    <div id="question">Wazzup???</div>
+    <div data-text="'title: ' + $title"></div>
   </body>
 </html>
