@@ -1,8 +1,13 @@
 <!doctype html>
+{{- define `message` -}}
+<div class="message">
+  <p class="content">{{- .Content -}}</p>
+</div>
+{{- end -}}
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title data-text="$title">{{ .Title }}</title>
+    <title data-text="$title">{{ .RoomName }}</title>
     <script type="module" src="/datastar.js"></script>
     <style type="text/css">
       @keyframes fade {
@@ -12,6 +17,11 @@
         to {
           opacity: 0;
         }
+      }
+
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation-duration: 2.5s;
       }
 
       ::view-transition-old(foo) {
@@ -36,6 +46,7 @@
     <div data-text="'title: ' + $title"></div>
     <hr />
     <input data-model="input" type="text" />
+    {{- range .Messages -}} {{- template `message` . -}} {{- end -}}
     <div data-text="$input">
       I will get replaced with the contents of the input signal
     </div>

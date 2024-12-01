@@ -6,4 +6,5 @@ type Message struct {
 	AuthorName string
 	Content    string
 	CreatedAt  int
+	UpdatedAt int
 }

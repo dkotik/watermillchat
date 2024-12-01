@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	datastar "github.com/starfederation/datastar/code/go/sdk"
+	datastarLibrary "github.com/starfederation/datastar/code/go/sdk"
 )
 
 //go:embed index.html
@@ -20,21 +20,25 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EventHandler(w http.ResponseWriter, r *http.Request) {
-	sse := datastar.NewSSE(w, r)
+	sse := datastarLibrary.NewSSE(w, r)
 
-	// Merges HTML fragments into the DOM.
 	sse.MergeFragments(
-		`<div id="question">What do you put in a toaster?</div>`)
+		`<title>Updated Title</title>`,
+		datastarLibrary.WithSelector("title"),
+	)
 
-	// Merges signals into the store.
 	sse.MergeSignals([]byte(`{response: '', answer: 'bread'}`))
 
 	for i := range 10 {
 		time.Sleep(time.Second)
 		sse.MergeFragments(
-			fmt.Sprintf(`<div id="question">%d ? %d ?</div>`,
+			fmt.Sprintf(`<div id="question" data-view-transition="foo">%d ? %d ?</div>`,
 				i,
-				time.Now().Unix()))
+				time.Now().Unix()),
+			datastarLibrary.WithMergeMode(datastarLibrary.FragmentMergeModeAppend),
+			datastarLibrary.WithSettleDuration(time.Second*2),
+			datastarLibrary.WithViewTransitions(),
+		)
 		sse.MergeSignals([]byte(
 			fmt.Sprintf(`{title: '%d - %d'}`, i,
 				time.Now().Unix())))
