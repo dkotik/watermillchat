@@ -1,26 +1,34 @@
 package datastar
 
 import (
+	"bytes"
 	_ "embed" // for templates
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"watermillchat"
+
+	datastar "github.com/starfederation/datastar/code/go/sdk"
 )
 
 //go:embed room.html
 var roomHTML string
 
 var (
-	roomTemplate    = template.Must(template.New("room").Parse(roomHTML))
+	roomTemplate = template.Must(template.New("room").Funcs(template.FuncMap{
+		"urlencode": url.QueryEscape,
+	}).Parse(roomHTML))
 	messageTemplate = roomTemplate.Lookup("message")
 )
 
-type roomTemplateParameters struct {
-	RoomName string
-	SendPath string
-	Messages []watermillchat.Message
+type RoomTemplateParameters struct {
+	RoomName          string
+	DataStarPath      string
+	MessageSendPath   string
+	MessageSourcePath string
 }
 
 type RoomSelector func(*http.Request) (string, error)
@@ -59,6 +67,23 @@ func NewRoomSelectorFromFormValue(formValueName string) RoomSelector {
 
 func NewRoomHandler(
 	c *watermillchat.Chat,
+	roomTemplateParameters RoomTemplateParameters,
+	rs RoomSelector,
+) HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) (err error) {
+		params := roomTemplateParameters
+		params.RoomName, err = rs(r)
+		if err != nil {
+			return err
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		return roomTemplate.Execute(w, params)
+	}
+}
+
+func NewRoomMessagesHandler(
+	c *watermillchat.Chat,
 	rs RoomSelector,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (err error) {
@@ -67,30 +92,32 @@ func NewRoomHandler(
 			return err
 		}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		if err = roomTemplate.Execute(w, roomTemplateParameters{
-			RoomName: roomName,
-			// Messages: history,
-		}); err != nil {
-			return err
+		sse := datastar.NewSSE(w, r)
+		if err = sse.MergeFragments(
+			`<p id="question">listening for messages</p>`,
+			datastar.WithSelector("#question"),
+		); err != nil {
+			return err // TODO: render error event instead?
 		}
 
-		// messages, history, closer := c.Subscribe(roomName)
-		// defer closer()
-		// b := &bytes.Buffer{}
-		// sse := datastar.NewSSE(w, r)
-		// for message := range messages {
-		// 	if err = messageTemplate.Execute(b, message); err != nil {
-		// 		return err // TODO: render error event instead?
-		// 	}
-		// 	if err = sse.MergeFragments(
-		// 		b.String(),
-		// 		datastar.WithSelector("title"),
-		// 	); err != nil {
-		// 		return err // TODO: render error event instead?
-		// 	}
-		// 	b.Reset()
-		// }
+		b := &bytes.Buffer{}
+		messages := c.Subscribe(r.Context(), roomName)
+		for batch := range messages {
+			for _, message := range batch {
+				if err = messageTemplate.Execute(b, message); err != nil {
+					return err // TODO: render error event instead?
+				}
+			}
+			slog.Info("delivering", slog.Any("message", b.String()))
+			if err = sse.MergeFragments(
+				b.String(),
+				datastar.WithSelector("#question"),
+				datastar.WithMergeAppend(),
+			); err != nil {
+				return err // TODO: render error event instead?
+			}
+			b.Reset()
+		}
 		return nil
 	}
 }

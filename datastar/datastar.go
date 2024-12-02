@@ -9,6 +9,7 @@ import (
 	_ "embed" // for bundindling datastar
 	"html/template"
 	"io"
+	"log/slog"
 	"net/http"
 
 	datastar "github.com/starfederation/datastar/code/go/sdk"
@@ -27,6 +28,7 @@ type HandlerFunc func(http.ResponseWriter, *http.Request) error
 func ErrorHandler(h HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
+			slog.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			sse := datastar.NewSSE(w, r)
 

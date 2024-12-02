@@ -2,7 +2,9 @@ package watermillchat
 
 import (
 	"context"
+	"slices"
 	"sync"
+	"time"
 )
 
 type Room struct {
@@ -30,26 +32,60 @@ func (r *Room) Send(ctx context.Context, m Message) error {
 	return nil
 }
 
-func (r *Room) Subscribe() (
-	messages <-chan Message,
-	history []Message,
-	closer func(),
-) {
-	client := make(chan Message)
+func (r *Room) Subscribe(ctx context.Context) <-chan []Message {
 	r.mu.Lock()
-	history = make([]Message, len(r.messages))
+	history := make([]Message, len(r.messages))
 	copy(history, r.messages)
+	client := make(chan Message, cap(r.messages)/4+1)
 	r.clients = append(r.clients, client)
 	r.mu.Unlock()
 
-	return client, history, func() {
-		r.mu.Lock()
-		for i, existing := range r.clients {
-			if existing == messages {
-				r.clients = append(r.clients[:i], r.clients[i+1:]...)
-				close(client)
+	batches := make(chan []Message, cap(client)/2+1)
+	if len(history) > 0 {
+		slices.Reverse(history)
+		batches <- history
+	}
+
+	go func(ctx context.Context) {
+		defer func() {
+			r.mu.Lock()
+			for i, existing := range r.clients {
+				if existing == client {
+					r.clients = slices.Delete(r.clients, i, i+1)
+					close(client)
+				}
+			}
+			r.mu.Unlock()
+			close(batches)
+		}()
+		tick := time.NewTicker(time.Millisecond * 300)
+		limit := cap(client)
+		batch := make([]Message, 0, limit)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case item := <-client:
+				batch = append(batch, item)
+				if len(batch) >= limit {
+					batchCopy := make([]Message, len(batch))
+					copy(batchCopy, batch)
+					slices.Reverse(batchCopy)
+					batches <- batchCopy
+					batch = batch[:0] // truncate
+				}
+			case <-tick.C:
+				if len(batch) > 0 {
+					batchCopy := make([]Message, len(batch))
+					copy(batchCopy, batch)
+					slices.Reverse(batchCopy)
+					batches <- batchCopy
+					batch = batch[:0] // truncate
+				}
 			}
 		}
-		r.mu.Unlock()
-	}
+	}(ctx)
+
+	return batches
 }

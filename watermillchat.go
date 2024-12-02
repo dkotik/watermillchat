@@ -16,20 +16,19 @@ type Chat struct {
 	mu sync.Mutex
 }
 
-func (c *Chat) Subscribe(roomName string) (
-	messages <-chan Message,
-	history []Message,
-	closer func(),
-) {
+func (c *Chat) Subscribe(ctx context.Context, roomName string) <-chan []Message {
 	c.mu.Lock()
 	room, ok := c.rooms[roomName]
 	if !ok {
 		room = &Room{}
+		if c.rooms == nil {
+			c.rooms = make(map[string]*Room)
+		}
 		c.rooms[roomName] = room
 	}
 	c.mu.Unlock()
 
-	return room.Subscribe()
+	return room.Subscribe(ctx)
 }
 
 func (c *Chat) Send(ctx context.Context, roomName string, m Message) error {

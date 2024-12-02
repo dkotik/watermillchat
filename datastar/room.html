@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <title data-text="$title">{{ .RoomName }}</title>
-    <script type="module" src="/datastar.js"></script>
+    <script type="module" src="{{ .DataStarPath }}"></script>
     <style type="text/css">
       @keyframes fade {
         from {
@@ -39,16 +39,29 @@
   </head>
   <body
     data-store="{title: 'test title'}"
-    data-on-load="$get('/events.html')"
+    data-on-load="$get('{{ .MessageSourcePath }}?roomName={{ urlencode .RoomName }}')"
     data-view-transition="foo"
   >
+    <h1>Chat: {{ .RoomName }}</h1>
     <div id="question">Wazzup???</div>
     <div data-text="'title: ' + $title"></div>
     <hr />
-    <input data-model="input" type="text" />
-    {{- range .Messages -}} {{- template `message` . -}} {{- end -}}
-    <div data-text="$input">
-      I will get replaced with the contents of the input signal
-    </div>
+    <form
+      action="{{ .MessageSendPath }}"
+      method="post"
+      onsubmit="return false;"
+    >
+      <input data-model="input" type="text" />
+      <div data-text="$input">
+        I will get replaced with the contents of the input signal
+      </div>
+      <button
+        type="button"
+        data-on-click="$post('{{ .MessageSendPath }}?roomName={{ urlencode .RoomName }}&content='+encodeURIComponent($input)) && ($input = '')"
+      >
+        Send
+      </button>
+      {{ .MessageSendPath }}
+    </form>
   </body>
 </html>

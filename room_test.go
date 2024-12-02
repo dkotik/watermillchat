@@ -2,25 +2,33 @@ package watermillchat
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 )
 
 func TestRoom(t *testing.T) {
-	ctx := context.Background()
-	r := &Room{}
-	messages, history, closer := r.Subscribe()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
+	defer cancel()
+	r := &Room{
+		messages: make([]Message, 0, 10),
+	}
+	messages := r.Subscribe(ctx)
 	go func() {
-		for m := range messages {
-			t.Log("recieved message:", m)
+		for i := range 20 {
+			r.Send(ctx, Message{
+				Content: fmt.Sprintf("test message: %d", i),
+			})
 		}
-		t.Log("-- channel closed --")
 	}()
 
-	if len(history) > 0 {
-		t.Error("history is not empty")
+	for batch := range messages {
+		for _, m := range batch {
+			t.Log("recieved message:", m)
+		}
+		if len(batch) == 0 {
+			t.Error("got an empty message batch")
+		}
 	}
-	r.Send(ctx, Message{
-		Content: "test message",
-	})
-	closer()
+	t.Log("-- channel closed --")
 }

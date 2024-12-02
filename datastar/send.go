@@ -2,6 +2,7 @@ package datastar
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"watermillchat"
@@ -20,6 +21,12 @@ func NewSendHandler(
 		if err != nil {
 			return err
 		}
+		slog.Info("sending message", slog.String("roomName", roomName), slog.String("content", content))
+
+		_ = c.Send(r.Context(), roomName, watermillchat.Message{
+			Content: content,
+		}) // double everything
+
 		return c.Send(r.Context(), roomName, watermillchat.Message{
 			Content: content,
 		})
