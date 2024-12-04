@@ -21,6 +21,7 @@ type chatOptions struct {
 	publisherTopic          string
 	publisher               message.Publisher
 	subscriber              message.Subscriber
+	history                 HistoryRepository
 	historyDepth            int
 	historyRetention        time.Duration
 	historyCleanupFrequency time.Duration
@@ -31,6 +32,9 @@ type DefaultOptions struct{}
 func (o DefaultOptions) initializeChat(c *chatOptions) error {
 	if c.context == nil {
 		c.context = context.Background()
+	}
+	if c.history == nil {
+		c.history = VoidHistoryRepository{}
 	}
 	if c.historyDepth == 0 {
 		c.historyDepth = 100
@@ -75,6 +79,27 @@ func (o contextOption) initializeChat(c *chatOptions) error {
 
 func WithContext(ctx context.Context) Option {
 	return contextOption{ctx: ctx}
+}
+
+type historyRepositoryOption struct {
+	repository HistoryRepository
+}
+
+func (o historyRepositoryOption) initializeChat(c *chatOptions) error {
+	if o.repository == nil {
+		return errors.New("cannot use a <nil> history repository")
+	}
+	if c.history != nil {
+		return errors.New("history repository is already set")
+	}
+	c.history = o.repository
+	return nil
+}
+
+func WithHistoryRepository(h HistoryRepository) Option {
+	return historyRepositoryOption{
+		repository: h,
+	}
 }
 
 type historyDepthOption int

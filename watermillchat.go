@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 type Chat struct {
 	publisherTopic   string
 	publisher        message.Publisher
+	history          HistoryRepository
 	historyDepth     int
 	historyRetention time.Duration
 
@@ -134,8 +136,19 @@ func (c *Chat) send(ctx context.Context, roomName string, m Message) error {
 	c.mu.Lock()
 	room, ok := c.rooms[roomName]
 	if !ok {
+		history, err := c.history.GetRoomMessages(ctx, roomName)
+		if err != nil {
+			c.mu.Unlock()
+			return err
+		}
+		if grow := c.historyDepth - len(history); grow > 0 {
+			history = slices.Grow(history, grow) // increase capacity
+		} else if grow < 0 {
+			history = history[-grow:] // truncate earlier messages
+		}
+
 		room = &Room{
-			messages: make([]Message, 0, c.historyDepth),
+			messages: history,
 		}
 		c.rooms[roomName] = room
 	}
