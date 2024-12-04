@@ -11,7 +11,10 @@ func NewMux(prefix string, rs RoomSelector) *http.ServeMux {
 		prefix = prefix + "/"
 	}
 	mux := &http.ServeMux{}
-	chat := &watermillchat.Chat{}
+	chat, err := watermillchat.NewChat()
+	if err != nil {
+		panic(err)
+	}
 	index := ErrorHandler(NewRoomHandler(chat, RoomTemplateParameters{
 		DataStarPath:      prefix + "datastar.js",
 		MessageSourcePath: prefix + "messages.html",

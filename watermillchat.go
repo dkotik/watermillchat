@@ -19,24 +19,38 @@ import (
 )
 
 type Chat struct {
-	publisherTopic string
-	publisher      message.Publisher
+	publisherTopic   string
+	publisher        message.Publisher
+	historyDepth     int
+	historyRetention time.Duration
 
 	rooms map[string]*Room
-	mu    sync.Mutex
+	mu    *sync.Mutex
 }
 
-func NewChat(topic string, publisher message.Publisher) (*Chat, error) {
-	if topic == "" {
-		return nil, errors.New("cannot publish to empty topic")
+func NewChat(withOptions ...Option) (c *Chat, err error) {
+	o := &chatOptions{}
+	for _, option := range append(withOptions, DefaultOptions{}) {
+		if err = option.initializeChat(o); err != nil {
+			return nil, fmt.Errorf("unable to initialize Watermill chat: %w", err)
+		}
 	}
-	if publisher == nil {
-		return nil, errors.New("cannot use a <nil> publisher")
+	incoming, err := o.subscriber.Subscribe(o.context, o.publisherTopic)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to Watermill subscriber: %w", err)
 	}
-	return &Chat{
-		publisherTopic: topic,
-		publisher:      publisher,
-	}, nil
+	c = &Chat{
+		publisherTopic:   o.publisherTopic,
+		publisher:        o.publisher,
+		historyDepth:     o.historyDepth,
+		historyRetention: o.historyRetention,
+
+		rooms: make(map[string]*Room),
+		mu:    &sync.Mutex{},
+	}
+	go c.Listen(incoming)
+	go c.cleanup(o.context, o.historyCleanupFrequency)
+	return c, nil
 }
 
 func (c *Chat) Publish(b Broadcast) (err error) {
@@ -68,7 +82,7 @@ func (c *Chat) Listen(messages <-chan *message.Message) {
 		message.ID = m.UUID
 		ctx, cancel = context.WithTimeout(context.Background(), time.Second)
 
-		if err = c.Send(ctx, message.RoomName, message.Message); err != nil {
+		if err = c.send(ctx, message.RoomName, message.Message); err != nil {
 			if errors.Is(err, context.Canceled) {
 				m.Nack()
 				continue
@@ -96,15 +110,29 @@ func (c *Chat) Subscribe(ctx context.Context, roomName string) <-chan []Message 
 }
 
 func (c *Chat) Send(ctx context.Context, roomName string, m Message) error {
+	payload, err := json.Marshal(Broadcast{RoomName: roomName, Message: m})
+	if err != nil {
+		return fmt.Errorf("unable to encode Watermill broadcast to JSON: %w", err)
+	}
+	if err = c.publisher.Publish(
+		c.publisherTopic,
+		message.NewMessage(watermill.NewUUID(), payload),
+	); err != nil {
+		return fmt.Errorf("unable to publish Watermill message: %w", err)
+	}
+	return nil
+}
+
+func (c *Chat) send(ctx context.Context, roomName string, m Message) error {
 	c.mu.Lock()
 	room, ok := c.rooms[roomName]
 	if !ok {
-		room = &Room{}
+		room = &Room{
+			messages: make([]Message, 0, c.historyDepth),
+		}
 		c.rooms[roomName] = room
 	}
 	c.mu.Unlock()
 
 	return room.Send(ctx, m)
 }
-
-// TODO: clean up rooms with no activity for a while

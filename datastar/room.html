@@ -58,39 +58,85 @@
       }
 
       body {
-        background-color: #323232;
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+
+        background: rgb(78, 31, 109);
+        background: -moz-linear-gradient(
+          0deg,
+          rgba(78, 31, 109, 1) 0%,
+          rgba(128, 35, 102, 1) 50%,
+          rgba(175, 8, 117, 1) 100%
+        );
+        background: -webkit-linear-gradient(
+          0deg,
+          rgba(78, 31, 109, 1) 0%,
+          rgba(128, 35, 102, 1) 50%,
+          rgba(175, 8, 117, 1) 100%
+        );
+        background: linear-gradient(
+          0deg,
+          rgba(78, 31, 109, 1) 0%,
+          rgba(128, 35, 102, 1) 50%,
+          rgba(175, 8, 117, 1) 100%
+        );
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#4e1f6d",endColorstr="#af0875",GradientType=1);
+      }
+
+      main {
+        margin: 0 auto;
+        padding: 1.5em 1em;
+        max-width: 60em;
+      }
+
+      .messages {
+        height: 70vh;
+        overflow-x: none;
+        overflow-y: scroll;
+        border: 2px solid black;
+        border-radius: 4px;
+        background-color: rgba(36, 15, 54, 0.9);
+      }
+
+      .messages .message > p.content {
+        color: white;
+        padding: 0.3em 1em 0.7em 1em;
+        margin: 0;
       }
     </style>
   </head>
   <body>
-    <h1>Chat: {{ .RoomName }}</h1>
-    <section style="height: 20em; overflow-x: none; overflow-y: scroll">
-      <div id="question">Wazzup???</div>
-    </section>
-    <hr
-      data-on-load="$get('{{ .MessageSourcePath }}?roomName={{ urlencode .RoomName }}')"
-    />
-    <form
-      action="{{ .MessageSendPath }}"
-      method="post"
-      onsubmit="return false;"
-      data-store="{roomName: '{{ .RoomName }}', ffff: ''}"
-      data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content}).then(res => $content = '').catch(err => $ffff = err)"
-    >
-      <!-- data-on-submit="$post('{{ .MessageSendPath }}') && ($content = '')" -->
-      <p id="error" style="display: none"></p>
-      <input
-        type="text"
-        name="content"
-        data-model="content"
-        data-on-keydown="$ffff = null && console.log('hc')"
-      />
-      <div data-text="$content">
-        I will get replaced with the contents of the input signal
-      </div>
-      <div class="error" data-show="$ffff">
-        <p data-text="$ffff ? $ffff + '.' : ''"></p>
-      </div>
-    </form>
+    <main>
+      <h1>Chat: {{ .RoomName }}</h1>
+      <section
+        class="messages"
+        data-on-load="$get('{{ .MessageSourcePath }}?roomName={{ urlencode .RoomName }}')"
+      >
+        <div id="question">Wazzup???</div>
+      </section>
+      <form
+        action="{{ .MessageSendPath }}"
+        method="post"
+        onsubmit="return false;"
+        data-store="{roomName: '{{ .RoomName }}', error: ''}"
+        data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content}).then(res => $content = '').catch(err => $error = err)"
+      >
+        <!-- data-on-submit="$post('{{ .MessageSendPath }}') && ($content = '')" -->
+        <p id="error" style="display: none"></p>
+        <input
+          type="text"
+          name="content"
+          data-model="content"
+          data-on-keydown.debounce_3s="$error = null"
+        />
+        <div data-text="$content">
+          I will get replaced with the contents of the input signal
+        </div>
+        <div class="error" data-show="$error">
+          <p data-text="$error ? $error + '.' : ''"></p>
+        </div>
+      </form>
+    </main>
   </body>
 </html>
