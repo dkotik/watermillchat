@@ -4,7 +4,8 @@ import (
 	"math/rand"
 	"testing"
 	"time"
-	"watermillchat"
+
+	"github.com/dkotik/watermillchat"
 )
 
 func TestBatch(t *testing.T) {

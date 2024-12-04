@@ -1,10 +1,11 @@
-module watermillchat
+module github.com/dkotik/watermillchat
 
 go 1.23.3
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.4.1
 	github.com/starfederation/datastar v0.20.1
+	github.com/urfave/cli/v3 v3.0.0-beta1
 )
 
 require (

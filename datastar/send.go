@@ -4,7 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"watermillchat"
+
+	"github.com/dkotik/watermillchat"
 )
 
 func NewSendHandler(c *watermillchat.Chat) HandlerFunc {
@@ -17,16 +18,13 @@ func NewSendHandler(c *watermillchat.Chat) HandlerFunc {
 			}
 		}()
 
-		roomName := r.FormValue("roomName")
-		if roomName == "" {
-			return errors.New("empty room name")
+		name := strings.TrimSpace(r.FormValue("authorName"))
+		if name == "" {
+			return errors.New("author name must be specified")
 		}
-		content := strings.TrimSpace(r.FormValue("content"))
-		if content == "" {
-			return errors.New("empty message")
-		}
-		return c.Send(r.Context(), roomName, watermillchat.Message{
-			Content: content,
+		return c.Send(r.Context(), r.FormValue("roomName"), watermillchat.Message{
+			AuthorName: name,
+			Content:    strings.TrimSpace(r.FormValue("content")),
 		})
 	}
 }

@@ -110,6 +110,13 @@ func (c *Chat) Subscribe(ctx context.Context, roomName string) <-chan []Message 
 }
 
 func (c *Chat) Send(ctx context.Context, roomName string, m Message) error {
+	if roomName == "" {
+		return errors.New("chat room name is required")
+	}
+	if m.Content == "" {
+		return errors.New("unable to send an empty message")
+	}
+
 	payload, err := json.Marshal(Broadcast{RoomName: roomName, Message: m})
 	if err != nil {
 		return fmt.Errorf("unable to encode Watermill broadcast to JSON: %w", err)

@@ -3,10 +3,11 @@ package datastar
 import (
 	"net/http"
 	"strings"
-	"watermillchat"
+
+	"github.com/dkotik/watermillchat"
 )
 
-func NewMux(prefix string, rs RoomSelector) *http.ServeMux {
+func NewMux(prefix string, rs RoomSelector, title string) *http.ServeMux {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix = prefix + "/"
 	}
@@ -16,6 +17,7 @@ func NewMux(prefix string, rs RoomSelector) *http.ServeMux {
 		panic(err)
 	}
 	index := ErrorHandler(NewRoomHandler(chat, RoomTemplateParameters{
+		Title:             title,
 		DataStarPath:      prefix + "datastar.js",
 		MessageSourcePath: prefix + "messages.html",
 		MessageSendPath:   prefix + "send.html",

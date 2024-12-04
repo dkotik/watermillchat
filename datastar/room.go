@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"watermillchat"
 
+	"github.com/dkotik/watermillchat"
 	datastar "github.com/starfederation/datastar/code/go/sdk"
 )
 
@@ -24,6 +24,7 @@ var (
 )
 
 type RoomTemplateParameters struct {
+	Title             string
 	RoomName          string
 	DataStarPath      string
 	MessageSendPath   string

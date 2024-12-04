@@ -1,13 +1,14 @@
 <!doctype html>
 {{- define `message` -}}
 <div class="message" data-scroll-into-view.smooth.vend>
+  <p class="author">{{- or .AuthorName "System" -}}</p>
   <p class="content">{{- .Content -}}</p>
 </div>
 {{- end -}}
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>{{ .RoomName }}</title>
+    <title>{{ or .Title .RoomName }}</title>
     <script type="module" src="{{ .DataStarPath }}"></script>
     <script type="text/javascript">
       let postForm = (target, params) => {
@@ -86,7 +87,7 @@
 
       main {
         margin: 0 auto;
-        padding: 1.5em 1em;
+        padding: 1.5em 2.5em;
         max-width: 60em;
       }
 
@@ -99,10 +100,32 @@
         background-color: rgba(36, 15, 54, 0.9);
       }
 
+      .messages .message {
+        clear: both;
+      }
+
+      .messages .message > p.author {
+        margin: 0;
+        padding: 0.3em 0.3em 0.7em 1em;
+        color: rgba(175, 8, 117, 1);
+        float: left;
+      }
+      .messages .message > p.author::after {
+        content: ":";
+      }
+
       .messages .message > p.content {
         color: white;
         padding: 0.3em 1em 0.7em 1em;
         margin: 0;
+      }
+
+      form#message {
+        visibility: hidden;
+      }
+
+      form#message.show {
+        visibility: visible;
       }
     </style>
   </head>
@@ -115,15 +138,32 @@
       >
         <div id="question">Wazzup???</div>
       </section>
+
       <form
+        action="#setName"
+        method="post"
+        onsubmit="return false;"
+        data-show="!$authorName"
+        data-on-submit="$authorName = $authorNameTyping"
+      >
+        Name:
+        <input
+          type="text"
+          name="content"
+          placeholder="Your name..."
+          data-model="authorNameTyping"
+        />
+      </form>
+
+      <form
+        id="message"
         action="{{ .MessageSendPath }}"
         method="post"
         onsubmit="return false;"
-        data-store="{roomName: '{{ .RoomName }}', error: ''}"
-        data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content}).then(res => $content = '').catch(err => $error = err)"
+        data-class="{'show': $authorName}"
+        data-store="{roomName: '{{ .RoomName }}', error: '', authorName: ''}"
+        data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content, authorName: $authorName}).then(res => $content = '').catch(err => $error = err)"
       >
-        <!-- data-on-submit="$post('{{ .MessageSendPath }}') && ($content = '')" -->
-        <p id="error" style="display: none"></p>
         <input
           type="text"
           name="content"
