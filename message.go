@@ -5,6 +5,11 @@ type Message struct {
 	AuthorID   string
 	AuthorName string
 	Content    string
-	CreatedAt  int
-	UpdatedAt int
+	CreatedAt  int64
+	UpdatedAt  int64
+}
+
+type Broadcast struct {
+	Message
+	RoomName string
 }

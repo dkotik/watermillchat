@@ -1,14 +1,39 @@
 <!doctype html>
 {{- define `message` -}}
-<div class="message">
+<div class="message" data-scroll-into-view.smooth.vend>
   <p class="content">{{- .Content -}}</p>
 </div>
 {{- end -}}
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title data-text="$title">{{ .RoomName }}</title>
+    <title>{{ .RoomName }}</title>
     <script type="module" src="{{ .DataStarPath }}"></script>
+    <script type="text/javascript">
+      let postForm = (target, params) => {
+        return fetch(target, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          },
+          body: Object.keys(params)
+            .map((key) => {
+              return (
+                encodeURIComponent(key) + "=" + encodeURIComponent(params[key])
+              );
+            })
+            .join("&"),
+        })
+          .catch((networkError) => {
+            console.log("network error:", networkError);
+            throw new Error("disconnected from the server");
+          })
+          .then(async (res) => {
+            if (!res.ok) throw new Error(await res.text());
+            return res;
+          });
+      };
+    </script>
     <style type="text/css">
       @keyframes fade {
         from {
@@ -33,35 +58,39 @@
       }
 
       body {
-        background-color: red;
+        background-color: #323232;
       }
     </style>
   </head>
-  <body
-    data-store="{title: 'test title'}"
-    data-on-load="$get('{{ .MessageSourcePath }}?roomName={{ urlencode .RoomName }}')"
-    data-view-transition="foo"
-  >
+  <body>
     <h1>Chat: {{ .RoomName }}</h1>
-    <div id="question">Wazzup???</div>
-    <div data-text="'title: ' + $title"></div>
-    <hr />
+    <section style="height: 20em; overflow-x: none; overflow-y: scroll">
+      <div id="question">Wazzup???</div>
+    </section>
+    <hr
+      data-on-load="$get('{{ .MessageSourcePath }}?roomName={{ urlencode .RoomName }}')"
+    />
     <form
       action="{{ .MessageSendPath }}"
       method="post"
       onsubmit="return false;"
+      data-store="{roomName: '{{ .RoomName }}', ffff: ''}"
+      data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content}).then(res => $content = '').catch(err => $ffff = err)"
     >
-      <input data-model="input" type="text" />
-      <div data-text="$input">
+      <!-- data-on-submit="$post('{{ .MessageSendPath }}') && ($content = '')" -->
+      <p id="error" style="display: none"></p>
+      <input
+        type="text"
+        name="content"
+        data-model="content"
+        data-on-keydown="$ffff = null && console.log('hc')"
+      />
+      <div data-text="$content">
         I will get replaced with the contents of the input signal
       </div>
-      <button
-        type="button"
-        data-on-click="$post('{{ .MessageSendPath }}?roomName={{ urlencode .RoomName }}&content='+encodeURIComponent($input)) && ($input = '')"
-      >
-        Send
-      </button>
-      {{ .MessageSendPath }}
+      <div class="error" data-show="$ffff">
+        <p data-text="$ffff ? $ffff + '.' : ''"></p>
+      </div>
     </form>
   </body>
 </html>

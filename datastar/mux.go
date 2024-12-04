@@ -21,8 +21,7 @@ func NewMux(prefix string, rs RoomSelector) *http.ServeMux {
 	mux.HandleFunc(prefix+"{$}", index)
 
 	mux.HandleFunc(prefix+"messages.html", ErrorHandler(NewRoomMessagesHandler(chat, NewRoomSelectorFromFormValue("roomName"))))
-	mux.HandleFunc(prefix+"send.html", ErrorHandler(
-		NewSendHandler(chat, NewRoomSelectorFromFormValue("roomName"))))
+	mux.HandleFunc(prefix+"send.html", ErrorHandler(NewSendHandler(chat)))
 	mux.HandleFunc(prefix+"datastar.js", SourceHandler)
 	mux.HandleFunc(prefix+"datastar.js.map", SourceMapHandler)
 	return mux

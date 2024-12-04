@@ -5,7 +5,6 @@ import (
 	_ "embed" // for templates
 	"fmt"
 	"html/template"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -93,22 +92,14 @@ func NewRoomMessagesHandler(
 		}
 
 		sse := datastar.NewSSE(w, r)
-		if err = sse.MergeFragments(
-			`<p id="question">listening for messages</p>`,
-			datastar.WithSelector("#question"),
-		); err != nil {
-			return err // TODO: render error event instead?
-		}
-
 		b := &bytes.Buffer{}
-		messages := c.Subscribe(r.Context(), roomName)
-		for batch := range messages {
+		for batch := range c.Subscribe(r.Context(), roomName) {
 			for _, message := range batch {
 				if err = messageTemplate.Execute(b, message); err != nil {
 					return err // TODO: render error event instead?
 				}
 			}
-			slog.Info("delivering", slog.Any("message", b.String()))
+
 			if err = sse.MergeFragments(
 				b.String(),
 				datastar.WithSelector("#question"),
