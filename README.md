@@ -16,6 +16,7 @@ If this package reaches **1.0** release, it will present a flexible and durable 
 - [ ] Add message history recall on boot.
 - [ ] Add Olama integration plugin.
 - [ ] Add user authentication.
+- [ ] Add favicon on `/` router mounts.
 
 ## Installation
 

@@ -87,6 +87,7 @@ func (c *Chat) Listen(messages <-chan *message.Message) {
 		if err = c.send(ctx, message.RoomName, message.Message); err != nil {
 			if errors.Is(err, context.Canceled) {
 				m.Nack()
+				cancel()
 				continue
 			}
 			slog.Error("dropping malformed message", slog.Any("error", err), slog.Any("ID", message.ID), slog.Any("roomName", message.RoomName))
