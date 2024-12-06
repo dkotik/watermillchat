@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/dkotik/watermillchat"
@@ -27,15 +28,26 @@ type Repository struct {
 }
 
 type RepositoryParameters struct {
-	Context             context.Context
-	Connection          *sqlite.Conn
-	Retention           time.Duration
-	CleanUpFrequency    time.Duration
+	Context    context.Context
+	Connection *sqlite.Conn
+
+	// Retention constraints the life time of messages before deletion. Defaults to [watermillchat.DefaultHistoryRetention].
+	Retention time.Duration
+
+	// CleanUpFrequency is the pause between message purge
+	// cycles based on retention. Defaults to [watermillchat.DefaultHistoryCleanupFrequency].
+	CleanUpFrequency time.Duration
+
+	// MostMessagesPerRoom constraints the maximum number of
+	// returned messages per room when history is loaded using
+	// [Repository.GetRoomMessages]. More messages may still
+	// be present in the database, if they retention duration
+	// has not yet run out. Defaults to [watermillchat.DefaultHistoryDepth].
 	MostMessagesPerRoom int64
 }
 
 func NewRepositoryUsingFile(f string, p RepositoryParameters) (*Repository, error) {
-	db, err := sqlite.OpenConn(f, sqlite.OpenReadWrite)
+	db, err := sqlite.OpenConn(f, sqlite.OpenReadWrite|sqlite.OpenCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -66,10 +78,22 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) {
 		}()
 	}
 	if p.Retention < time.Minute {
-		return nil, errors.New("message retention duration cannot be less than one minute")
+		if p.Retention != 0 {
+			return nil, errors.New("message retention duration cannot be less than one minute")
+		}
+		p.Retention = watermillchat.DefaultHistoryRetention
+	}
+	if p.CleanUpFrequency < time.Minute {
+		if p.CleanUpFrequency != 0 {
+			return nil, errors.New("clean up frequency cannot be less than one minute")
+		}
+		p.CleanUpFrequency = watermillchat.DefaultCleanupFrequency
 	}
 	if p.MostMessagesPerRoom < 1 {
-		return nil, errors.New("message retention limit cannot be less than one")
+		if p.MostMessagesPerRoom != 0 {
+			return nil, errors.New("message retention limit cannot be less than one")
+		}
+		p.MostMessagesPerRoom = watermillchat.DefaultHistoryDepth
 	}
 
 	r = &Repository{
@@ -131,7 +155,7 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) {
 				}
 			}
 		}
-	}(p.Context, cmp.Or(p.CleanUpFrequency, time.Minute*5), p.Retention)
+	}(p.Context, p.CleanUpFrequency, p.Retention)
 	return r, nil
 }
 
@@ -168,5 +192,6 @@ func (r *Repository) GetRoomMessages(ctx context.Context, roomName string) (mess
 	if err = r.stmtCollect.Reset(); err != nil {
 		return nil, err
 	}
+	slices.Reverse(messages)
 	return messages, nil
 }

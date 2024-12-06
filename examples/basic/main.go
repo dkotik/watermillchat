@@ -16,9 +16,11 @@ func main() {
 		context.Background(),
 		"testRoom",
 		watermillchat.Message{
-			ID:         "test",
-			AuthorName: "test user",
-			Content:    "test message contents",
+			Author: &watermillchat.Identity{
+				ID:   "test",
+				Name: "test user",
+			},
+			Content: "test message contents",
 		},
 	); err != nil {
 		panic(err)

@@ -2,8 +2,8 @@ github.com/ThreeDotsLabs/watermill v1.4.1 h1:gjP6yZH+otMPjV0KsV07pl9TeMm9UQV/gqi
 github.com/ThreeDotsLabs/watermill v1.4.1/go.mod h1:lBnrLbxOjeMRgcJbv+UiZr8Ylz8RkJ4m6i/VN/Nk+to=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dkotik/watermillchat v0.0.1 h1:jgvGMdiRwrikIV4S8ijicoTkB652vvhkTrW23UQV42M=
-github.com/dkotik/watermillchat v0.0.1/go.mod h1:dtk6SEF+njNenpKMktIDCn/x5xS0IhntY5pSz3urYUE=
+github.com/dkotik/watermillchat v0.0.2 h1:orCNlwJ8zPvZw8mXPcdIrb4tnP0gOJqolWaDnQ2aIzE=
+github.com/dkotik/watermillchat v0.0.2/go.mod h1:dtk6SEF+njNenpKMktIDCn/x5xS0IhntY5pSz3urYUE=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=

@@ -2,6 +2,7 @@ package sqlitehistory_test
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -9,10 +10,16 @@ import (
 	"github.com/dkotik/watermillchat/history/sqlitehistory"
 )
 
-func TestSQLiteConnection(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
+func TestFileBacked(t *testing.T) {
+	history, err := sqlitehistory.NewRepositoryUsingFile(
+		filepath.Join(t.TempDir(), "test.sqlite3"), sqlitehistory.RepositoryParameters{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	testInsert(t, history)
+}
 
+func TestSQLiteConnection(t *testing.T) {
 	history, err := sqlitehistory.NewRepository(sqlitehistory.RepositoryParameters{
 		MostMessagesPerRoom: 100,
 		Retention:           time.Minute,
@@ -23,10 +30,18 @@ func TestSQLiteConnection(t *testing.T) {
 	if history == nil {
 		t.Fatal("<nil> history returned by the constructor")
 	}
+	testInsert(t, history)
+}
 
-	if err = history.Insert(ctx, watermillchat.Broadcast{Message: watermillchat.Message{
+func testInsert(t *testing.T, history *sqlitehistory.Repository) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	err := history.Insert(ctx, watermillchat.Broadcast{Message: watermillchat.Message{
 		ID: "test",
-	}, RoomName: "test"}); err != nil {
+	}, RoomName: "test"})
+	if err != nil {
 		t.Fatal(err)
 	}
 

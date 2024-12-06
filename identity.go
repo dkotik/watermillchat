@@ -15,7 +15,7 @@ func ContextWithIdentity(parent context.Context, id Identity) context.Context {
 	return context.WithValue(parent, contextKey, id)
 }
 
-func IdentityFromContext(ctx context.Context) (id Identity) {
-	id, _ = ctx.Value(contextKey).(Identity)
+func IdentityFromContext(ctx context.Context) (id Identity, ok bool) {
+	id, ok = ctx.Value(contextKey).(Identity)
 	return
 }

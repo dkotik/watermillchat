@@ -73,8 +73,7 @@ func (c *Chat) Listen(messages <-chan *message.Message) {
 		message.RoomName = ""
 		message.ID = ""
 		message.Content = ""
-		message.AuthorID = ""
-		message.AuthorName = ""
+		message.Author = nil
 
 		if err = json.Unmarshal(m.Payload, &message); err != nil {
 			slog.Error("dropping malformed broadcast message", slog.Any("error", err), slog.String("ID", m.UUID))
@@ -126,7 +125,7 @@ func (c *Chat) Send(ctx context.Context, roomName string, m Message) error {
 	}
 	if err = c.publisher.Publish(
 		c.publisherTopic,
-		message.NewMessage(watermill.NewUUID(), payload),
+		message.NewMessage(m.ID, payload),
 	); err != nil {
 		return fmt.Errorf("unable to publish Watermill message: %w", err)
 	}
