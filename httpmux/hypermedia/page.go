@@ -10,8 +10,13 @@ import (
 	"net/http"
 )
 
-//go:embed page.html
-var pageTemplate string
+var (
+	//go:embed page.html
+	pageTemplate string
+
+	//go:embed style/page.css
+	pageStyle []byte
+)
 
 type PageValues struct {
 	Locale      string
@@ -72,4 +77,9 @@ func NewPageRenderer(
 		_, _ = io.Copy(w, bytes.NewReader(tail))
 		b.Reset()
 	}
+}
+
+func PageStyleHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/css")
+	_, _ = io.Copy(w, bytes.NewReader(pageStyle))
 }

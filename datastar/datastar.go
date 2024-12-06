@@ -9,18 +9,11 @@ import (
 	_ "embed" // for bundindling datastar
 	"fmt"
 	"html/template"
-	"io"
 	"log/slog"
 	"net/http"
 
 	datastar "github.com/starfederation/datastar/code/go/sdk"
 )
-
-//go:embed datastar.js
-var scriptSource []byte
-
-//go:embed datastar.js.map
-var scriptSourceMap []byte
 
 //go:embed error.html
 var errorTemplateSource string
@@ -66,14 +59,4 @@ func ErrorHandler(h HandlerFunc) http.HandlerFunc {
 			}
 		}
 	}
-}
-
-func SourceHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/javascript")
-	_, _ = io.Copy(w, bytes.NewReader(scriptSource))
-}
-
-func SourceMapHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = io.Copy(w, bytes.NewReader(scriptSourceMap))
 }

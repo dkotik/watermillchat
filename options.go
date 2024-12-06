@@ -12,6 +12,12 @@ import (
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 )
 
+const (
+	DefaultHistoryDepth     = 1000
+	DefaultHistoryRetention = time.Minute * 60 * 24 // 24 hours
+	DefaultCleanupFrequency = time.Minute * 15
+)
+
 type Option interface {
 	initializeChat(*chatOptions) error
 }
@@ -37,13 +43,13 @@ func (o DefaultOptions) initializeChat(c *chatOptions) error {
 		c.history = VoidHistoryRepository{}
 	}
 	if c.historyDepth == 0 {
-		c.historyDepth = 100
+		c.historyDepth = DefaultHistoryDepth
 	}
 	if c.historyRetention < time.Second {
-		c.historyRetention = time.Minute * 60
+		c.historyRetention = DefaultHistoryRetention
 	}
 	if c.historyCleanupFrequency == 0 {
-		c.historyCleanupFrequency = time.Minute
+		c.historyCleanupFrequency = DefaultCleanupFrequency
 	}
 	if c.publisherTopic == "" {
 		c.publisherTopic = "watermillchat"
@@ -96,6 +102,9 @@ func (o historyRepositoryOption) initializeChat(c *chatOptions) error {
 	return nil
 }
 
+// WithHistoryRepository stores all messages into a repository.
+// If present, messages are recovered before a room is loaded
+// into memory. Defaults to [VoidHistoryRepository].
 func WithHistoryRepository(h HistoryRepository) Option {
 	return historyRepositoryOption{
 		repository: h,
@@ -115,6 +124,8 @@ func (o historyDepthOption) initializeChat(c *chatOptions) error {
 	return nil
 }
 
+// WithHistoryDepth constraints the maximum number of
+// retained messages per room. Defaults to [DefaultHistoryDepth].
 func WithHistoryDepth(value int) Option {
 	return historyDepthOption(value)
 }
@@ -132,6 +143,7 @@ func (o historyRetentionOption) initializeChat(c *chatOptions) error {
 	return nil
 }
 
+// WithHistoryRetention constraints the life time of messages before deletion. Defaults to [DefaultHistoryRetention].
 func WithHistoryRetention(d time.Duration) Option {
 	return historyRetentionOption(d)
 }
@@ -149,6 +161,7 @@ func (o historyCleanupFrequencyOption) initializeChat(c *chatOptions) error {
 	return nil
 }
 
+// WithHistoryCleanupFrequency is the pause between message purge. Defaults to [DefaultHistoryCleanupFrequency].
 func WithHistoryCleanupFrequency(d time.Duration) Option {
 	return historyCleanupFrequencyOption(d)
 }
