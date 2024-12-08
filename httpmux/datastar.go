@@ -11,12 +11,6 @@ import (
 type defaultDatastarOptions struct{}
 
 func (d defaultDatastarOptions) initializeDatastarFrontend(o *datastarOptions) error {
-	if !strings.HasPrefix(o.Prefix, "/") {
-		o.Prefix = "/" + o.Prefix
-	}
-	if !strings.HasSuffix(o.Prefix, "/") {
-		o.Prefix = o.Prefix + "/"
-	}
 	if o.Mux == nil {
 		o.Mux = &http.ServeMux{}
 	}
@@ -26,7 +20,7 @@ func (d defaultDatastarOptions) initializeDatastarFrontend(o *datastarOptions) e
 	return nil
 }
 
-func MountDatastarFrontend(withOptions ...DatastarOption) (mux *http.ServeMux, err error) {
+func NewDatastarFrontend(withOptions ...DatastarOption) (mux *http.ServeMux, err error) {
 	o := &datastarOptions{}
 	for _, option := range append(withOptions, defaultDatastarOptions{}) {
 		if err = option.initializeDatastarFrontend(o); err != nil {
@@ -38,7 +32,15 @@ func MountDatastarFrontend(withOptions ...DatastarOption) (mux *http.ServeMux, e
 	if err != nil {
 		return nil, err
 	}
+	if !strings.HasPrefix(o.Prefix, "/") {
+		o.Prefix = "/" + o.Prefix
+	}
+	if !strings.HasSuffix(o.Prefix, "/") {
+		o.Prefix = o.Prefix + "/"
+	}
 
+	mux = o.Mux
+	// authenticated := o.Authenticator()
 	// index := ErrorHandler(NewRoomHandler(chat, RoomTemplateParameters{
 	// 	Title:             title,
 	// 	DataStarPath:      prefix + "datastar.js",
@@ -49,12 +51,11 @@ func MountDatastarFrontend(withOptions ...DatastarOption) (mux *http.ServeMux, e
 	// mux.HandleFunc(prefix+"{$}", index)
 
 	// mux.HandleFunc(prefix+"messages.html", ErrorHandler(NewRoomMessagesHandler(chat, NewRoomSelectorFromFormValue("roomName"))))
-	o.Mux.HandleFunc(o.Prefix+"send", NewSendHandler(
+	mux.Handle(o.Prefix+"send", o.Authenticator(NewSendHandler(
 		chat,
-		DefaultErrorHandler,
-	))
-	// mux.HandleFunc(prefix+"datastar.js", hypermedia.DatastarHandler)
+		o.ErrorHandler,
+	)))
+	// o.Mux.HandleFunc(prefix+"datastar.js", hypermedia.DatastarHandler)
 	// mux.HandleFunc(prefix+"datastar.js.map", hypermedia.DatastarMapHandler)
-	// TODO: move from datastar package
-	return o.Mux, nil
+	return mux, nil
 }

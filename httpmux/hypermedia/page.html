@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ or .Locale "en" }}">
+<html lang="{{ or .Language "en" }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover" />
@@ -7,13 +7,12 @@
     <title>{{ .Title }}</title>
     <meta property="og:title" content="{{ .Title }}" />
     <meta name="twitter:title" content="{{ .Title }}" />
-    <meta name="description" value="{{ .Description }}" />
     <meta name="description" content="{{ .Description }}" />
     <meta name="og:description" content="{{ .Description }}" />
     <meta name="twitter:description" content="{{ .Description }}" />
     {{ with .Image }}
-      <meta property="og:image" content="{{ .Image }}" />
-      <meta property="twitter:image" content="{{ .Image }}"  />
+      <meta property="og:image" content="{{ . }}" />
+      <meta property="twitter:image" content="{{ . }}"  />
     {{ end }}
     <link rel="icon" type="image/png" href="{{ or .FavIconPNG "/favicon.png" }}">
     {{- range .Scripts -}}
