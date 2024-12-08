@@ -17,15 +17,12 @@ import (
 const PageContentType = "text/html; charset=utf-8"
 
 var (
-	//go:embed style/page.css
-	pageStyle []byte
-
 	//go:embed page.html
 	pageTemplateSource string
 	pageTemplate       = template.Must(template.New("page").Parse(pageTemplateSource))
 )
 
-type Renderer interface {
+type Renderable interface {
 	Render(context.Context, io.Writer, *i18n.Localizer) error
 }
 
@@ -40,7 +37,23 @@ type prerenderedPage struct {
 	HyperText []byte
 }
 
-func NewPage(ctx context.Context, r Renderer, b *i18n.Bundle, prioritizeLanguages ...string) http.Handler {
+func NewPage(source Renderable, eh ErrorHandler, bundle *i18n.Bundle) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", PageContentType)
+			err := source.Render(
+				r.Context(), w,
+				i18n.NewLocalizer(bundle, r.Header.Get("Accept-Language")),
+			)
+			if err != nil {
+				eh.HandlerError(w, r, err)
+				return
+			}
+		},
+	)
+}
+
+func NewStaticPage(ctx context.Context, r Renderable, b *i18n.Bundle, prioritizeLanguages ...string) http.Handler {
 	languages := b.LanguageTags()
 	if len(prioritizeLanguages) > 0 {
 		if err := SortLanguageTags(languages, strings.Join(prioritizeLanguages, ",")); err != nil {
@@ -97,7 +110,7 @@ type Head struct {
 	Image       string
 	FavIconPNG  string
 	Scripts     []string
-	Stylesheets []string
+	StyleSheets []string
 }
 
 type pageTemplateValues struct {
@@ -107,47 +120,50 @@ type pageTemplateValues struct {
 	Image       string
 	FavIconPNG  string
 	Scripts     []string
-	Stylesheets []string
+	StyleSheets []string
 	Main        template.HTML
 }
 
 func NewPageRenderer(
 	head Head,
-	body Renderer,
-) Renderer {
-	return RendererFunc(func(
-		ctx context.Context,
-		w io.Writer,
-		l *i18n.Localizer,
-	) (err error) {
-		b := &bytes.Buffer{} // TODO: use buffer pool here
-		if err = body.Render(ctx, b, l); err != nil {
-			return err
-		}
+) func(Renderable) Renderable {
+	if head.Title == nil {
+		panic("cannot use a <nil> page title")
+	}
+	if head.Description == nil {
+		panic("cannot use a <nil> page description")
+	}
 
-		title, language, err := l.LocalizeWithTag(head.Title)
-		if err != nil {
-			return fmt.Errorf("cannot localize title: %w", err)
-		}
-		description, err := l.Localize(head.Description)
-		if err != nil {
-			return fmt.Errorf("cannot localize description: %w", err)
-		}
+	return func(main Renderable) Renderable {
+		return RendererFunc(func(
+			ctx context.Context,
+			w io.Writer,
+			l *i18n.Localizer,
+		) (err error) {
+			b := &bytes.Buffer{} // TODO: use buffer pool here
+			if err = main.Render(ctx, b, l); err != nil {
+				return err
+			}
 
-		return pageTemplate.Execute(w, pageTemplateValues{
-			Language:    language.String(),
-			Title:       title,
-			Description: description,
-			Image:       head.Image,
-			FavIconPNG:  head.FavIconPNG,
-			Scripts:     head.Scripts,
-			Stylesheets: head.Stylesheets,
-			Main:        template.HTML(b.String()),
+			title, language, err := l.LocalizeWithTag(head.Title)
+			if err != nil {
+				return fmt.Errorf("cannot localize title: %w", err)
+			}
+			description, err := l.Localize(head.Description)
+			if err != nil {
+				return fmt.Errorf("cannot localize description: %w", err)
+			}
+
+			return pageTemplate.Execute(w, pageTemplateValues{
+				Language:    language.String(),
+				Title:       title,
+				Description: description,
+				Image:       head.Image,
+				FavIconPNG:  head.FavIconPNG,
+				Scripts:     head.Scripts,
+				StyleSheets: head.StyleSheets,
+				Main:        template.HTML(b.String()),
+			})
 		})
-	})
-}
-
-func PageStyleHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/css")
-	_, _ = io.Copy(w, bytes.NewReader(pageStyle))
+	}
 }

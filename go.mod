@@ -7,6 +7,7 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.4.1
 	github.com/starfederation/datastar v0.20.1
 	github.com/urfave/cli/v3 v3.0.0-beta1
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
 	golang.org/x/text v0.20.0
 )
 
@@ -21,5 +22,4 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/samber/lo v1.47.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 )

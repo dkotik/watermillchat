@@ -1,5 +1,30 @@
+<script type="text/javascript">
+  async function postForm(target, data, token) {
+    return fetch(target, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      },
+      body: Object.keys(data)
+        .map((key) => {
+          return encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
+        })
+        .join("&"),
+    })
+      .catch((networkError) => {
+        console.log("network error:", networkError);
+        throw new Error("disconnected from the server");
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await res.text());
+        return res;
+      });
+  }
+</script>
+
 <h1>
-  Chat: {{ .RoomName }}
+  Chat Room
   <button data-on-click="$clipboard(window.location.href)">Copy Link</button>
   <a href="https://github.com/dkotik/watermillchat" target="_blank">
     <svg height="32" viewBox="0 0 24 24" version="1.1" width="32">
@@ -11,7 +36,7 @@
 </h1>
 <section
   class="messages"
-  data-on-load="$get('{{ .MessageSourcePath }}?roomName={{ urlencode .RoomName }}')"
+  data-on-load="$get('{{ .MessageSourcePath }}?roomName='+encodeURIComponent($roomName))"
 >
   <div id="question">Wazzup???</div>
 </section>
@@ -42,7 +67,7 @@
   onsubmit="return false;"
   data-class="{'show': $authorName}"
   data-store="{roomName: '{{ .RoomName }}', error: '', authorName: ''}"
-  data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content, authorName: $authorName}).then(res => $content = '').catch(err => $error = err)"
+  data-on-submit="postForm('{{ .MessageSendPath }}', {roomName: $roomName, content: $content, authorName: $authorName}, 'authorID:'+$authorName).then(res => $content = '').catch(err => $error = err)"
 >
   <input
     type="text"

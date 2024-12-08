@@ -8,7 +8,7 @@ import (
 	"github.com/dkotik/watermillchat"
 )
 
-func NewNaiveBearerHeaderAuthenticatorUnsafe(next http.Handler) http.Handler {
+func NaiveBearerHeaderAuthenticatorUnsafe(next http.Handler) http.Handler {
 	slog.Warn("an HTTP service is running with naive unsafe header token authenticator for demonstration purposes; it must never be used in production")
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {

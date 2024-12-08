@@ -10,13 +10,18 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dkotik/watermillchat/datastar"
+	"github.com/dkotik/watermillchat/httpmux"
 	"github.com/urfave/cli/v3"
 )
 
 var allowedRooms = []string{"test"}
 
 func serve(ctx context.Context, address string) error {
+	mux, err := httpmux.New()
+	if err != nil {
+		return err
+	}
+
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
@@ -35,9 +40,7 @@ func serve(ctx context.Context, address string) error {
 		}
 	}()
 
-	return http.Serve(listener, datastar.NewMux("/", func(r *http.Request) (string, error) {
-		return "test", nil
-	}, "Watermill Chat Demonstration"))
+	return http.Serve(listener, mux)
 }
 
 func main() {

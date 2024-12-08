@@ -1,4 +1,4 @@
-let postForm = async (target, params) => {
+export async function postForm(target, params) {
   return fetch(target, {
     method: "POST",
     headers: {
@@ -18,4 +18,4 @@ let postForm = async (target, params) => {
       if (!res.ok) throw new Error(await res.text());
       return res;
     });
-};
+}

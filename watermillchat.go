@@ -44,6 +44,7 @@ func NewChat(withOptions ...Option) (c *Chat, err error) {
 	c = &Chat{
 		publisherTopic:   o.publisherTopic,
 		publisher:        o.publisher,
+		history:          o.history,
 		historyDepth:     o.historyDepth,
 		historyRetention: o.historyRetention,
 

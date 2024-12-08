@@ -1,4 +1,7 @@
 <section class="error">
   <h1>{{ .Title }}</h1>
   <p>{{ .Description }}</p>
+  {{- with .StatusCodeDescription -}}
+  <p class="help">{{ . }}</p>
+  {{- end -}}
 </section>
