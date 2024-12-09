@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.4.1
-	github.com/dkotik/watermillchat v0.0.2
+	github.com/dkotik/watermillchat v0.0.4
 	zombiezen.com/go/sqlite v1.4.0
 )
 

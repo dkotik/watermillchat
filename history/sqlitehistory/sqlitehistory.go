@@ -109,10 +109,10 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) {
 	if err = sqlitex.ExecuteTransient(r.db, `
 		CREATE TABLE IF NOT EXISTS wmc_messages (
 			id BLOB NOT NULL PRIMARY KEY,
-			room_name TEXT,
+			room_name TEXT NOT NULL,
 			author_id TEXT,
 			author_name TEXT,
-			content TEXT,
+			content TEXT NOT NULL,
 			created_at INTEGER NOT NULL,
 			updated_at
 		)
@@ -166,8 +166,10 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) {
 func (r *Repository) Insert(ctx context.Context, m watermillchat.Broadcast) (err error) {
 	r.stmtInsert.BindText(1, m.ID)
 	r.stmtInsert.BindText(2, m.RoomName)
-	r.stmtInsert.BindText(3, m.AuthorID)
-	r.stmtInsert.BindText(4, m.AuthorName)
+	if m.Author != nil {
+		r.stmtInsert.BindText(3, m.Author.ID)
+		r.stmtInsert.BindText(4, m.Author.Name)
+	}
 	r.stmtInsert.BindText(5, m.Content)
 	r.stmtInsert.BindInt64(6, m.CreatedAt)
 	r.stmtInsert.BindInt64(7, m.UpdatedAt)
@@ -184,13 +186,19 @@ func (r *Repository) GetRoomMessages(ctx context.Context, roomName string) (mess
 		} else if !hasRow {
 			break
 		}
+		var author *watermillchat.Identity
+		if authorID := r.stmtCollect.GetText("author_id"); authorID != "" {
+			author = &watermillchat.Identity{
+				ID:   authorID,
+				Name: r.stmtCollect.GetText("author_name"),
+			}
+		}
 		messages = append(messages, watermillchat.Message{
-			ID:         r.stmtCollect.GetText("id"),
-			AuthorID:   r.stmtCollect.GetText("author_id"),
-			AuthorName: r.stmtCollect.GetText("author_name"),
-			Content:    r.stmtCollect.GetText("content"),
-			CreatedAt:  r.stmtCollect.GetInt64("created_at"),
-			UpdatedAt:  r.stmtCollect.GetInt64("updated_at"),
+			ID:        r.stmtCollect.GetText("id"),
+			Author:    author,
+			Content:   r.stmtCollect.GetText("content"),
+			CreatedAt: r.stmtCollect.GetInt64("created_at"),
+			UpdatedAt: r.stmtCollect.GetInt64("updated_at"),
 		})
 	}
 	if err = r.stmtCollect.Reset(); err != nil {

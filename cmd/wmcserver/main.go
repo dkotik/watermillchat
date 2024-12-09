@@ -25,7 +25,7 @@ func serve(ctx context.Context, address string) error {
 	// 	return fmt.Errorf("unable to set up history file: %w", err)
 	// }
 	chat, err := watermillchat.NewChat(
-	// 	httpmux.WithHistory(history),
+	// watermillchat.WithHistoryRepository(history),
 	)
 	if err != nil {
 		return err
