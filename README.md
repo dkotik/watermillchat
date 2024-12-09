@@ -11,13 +11,12 @@ This package is a portfolio proof of concept of a durable HTTP live chat atop [W
 
 If this package reaches **1.0** release, it will present a flexible and durable live chat system that can be easily integrated into projects that require chat modules with minimal dependencies and wide storage system support.
 
-- [x] Add message history recall on boot.
-- [ ] Add random room generator.
-- [ ] Make room link sharable.
-- [ ] Add Olama integration plugin.
-- [ ] Add user authentication.
 - [ ] Add favicon on `/` router mounts.
-- [ ] Minify pre-rendered pages.
+- [x] Add message history recall on boot.
+- [x] Add random room generator.
+- [x] Make room link sharable.
+- [ ] Add user authentication.
+- [ ] Add Olama integration plugin.
 
 ## Installation
 

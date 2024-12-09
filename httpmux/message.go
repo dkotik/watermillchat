@@ -23,18 +23,27 @@ var messageTemplate = template.Must(template.New("message").Parse(
 
 func NewRoomMessagesHandler(
 	c *watermillchat.Chat,
+	selector RoomSelector,
 	eh hypermedia.ErrorHandler,
 ) http.HandlerFunc {
+	if c == nil {
+		panic("cannot use a <nil> Watermill chat")
+	}
+	if selector == nil {
+		panic("cannot use a <nil> selector")
+	}
+	if eh == nil {
+		panic("cannot use a <nil> error handler")
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		roomName := strings.TrimSpace(r.URL.Query().Get("roomName"))
-		if roomName == "" {
-			eh.HandlerError(w, r, hypermedia.ErrNotFound)
+		roomName, err := selector(r)
+		if err != nil {
+			eh.HandlerError(w, r, err)
 			return
 		}
-
 		sse := datastar.NewSSE(w, r)
 		b := &bytes.Buffer{}
-		var err error
 
 		for batch := range c.Subscribe(r.Context(), roomName) {
 			for _, message := range batch {

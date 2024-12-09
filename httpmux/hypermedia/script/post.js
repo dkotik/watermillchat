@@ -1,12 +1,13 @@
-export async function postForm(target, params) {
+export async function postForm(target, data, token) {
   return fetch(target, {
     method: "POST",
     headers: {
+      Authorization: "Bearer " + token,
       "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
     },
-    body: Object.keys(params)
+    body: Object.keys(data)
       .map((key) => {
-        return encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
+        return encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
       })
       .join("&"),
   })
@@ -19,3 +20,5 @@ export async function postForm(target, params) {
       return res;
     });
 }
+
+window.postForm = postForm;

@@ -1,28 +1,9 @@
-<script type="text/javascript">
-  async function postForm(target, data, token) {
-    return fetch(target, {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + token,
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-      },
-      body: Object.keys(data)
-        .map((key) => {
-          return encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
-        })
-        .join("&"),
-    })
-      .catch((networkError) => {
-        console.log("network error:", networkError);
-        throw new Error("disconnected from the server");
-      })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(await res.text());
-        return res;
-      });
-  }
+<script lang="javascript">
+  const roomName = window.location.href.substring(
+    window.location.href.lastIndexOf("/") + 1,
+  );
+  console.log("seeking:", roomName);
 </script>
-
 <h1>
   Chat Room
   <button data-on-click="$clipboard(window.location.href)">Copy Link</button>
@@ -36,25 +17,25 @@
 </h1>
 <section
   class="messages"
-  data-on-load="$get('{{ .MessageSourcePath }}?roomName='+encodeURIComponent($roomName))"
+  data-on-load="$get(roomName + '/messages', {openWhenHidden: true})"
 >
-  <div id="question">Wazzup???</div>
+  <div id="question"></div>
 </section>
 
 <form
   action="#setName"
   method="post"
   onsubmit="return false;"
-  data-show="!$authorName"
   data-on-submit="$authorName = $authorNameTyping"
 >
-  <details>
-    <summary>My name</summary>
-    <label>Name:</label>
+  <details data-signals-openName="true" data-attributes-open="$openName">
+    <summary data-text="`Sending as ${$authorName || 'Anonymous'}`">
+      Anonymous
+    </summary>
     <input
       type="text"
       name="content"
-      placeholder="Your name..."
+      placeholder="Anonymous"
       data-model="authorNameTyping"
     />
   </details>
@@ -75,9 +56,6 @@
     data-model="content"
     data-on-keydown.debounce_3s="$error = null"
   />
-  <div data-text="$content">
-    I will get replaced with the contents of the input signal
-  </div>
   <div class="error" data-show="$error">
     <p data-text="$error ? $error + '.' : ''"></p>
   </div>
