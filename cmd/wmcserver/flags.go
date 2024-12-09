@@ -1,6 +1,8 @@
 package main
 
-import "github.com/urfave/cli/v3"
+import (
+	"github.com/urfave/cli/v3"
+)
 
 func flags() []cli.Flag {
 	return []cli.Flag{

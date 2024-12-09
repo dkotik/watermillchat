@@ -15,16 +15,18 @@ import (
 //go:embed room.html
 var roomTemplateSource string
 
-var roomTemplate = template.Must(template.New("room").Parse(roomTemplateSource))
+var roomTemplate = template.Must(template.New("room").Funcs(template.FuncMap{
+	"GetLocalIP": GetLocalIP,
+}).Parse(roomTemplateSource))
 
 type RoomRenderer struct {
 	RoomName        string
 	MessageSendPath string
 	MessageSource   string
+	HostName        string
 }
 
 func (r RoomRenderer) Render(ctx context.Context, w io.Writer, l *i18n.Localizer) error {
-
 	return roomTemplate.Execute(w, r)
 }
 

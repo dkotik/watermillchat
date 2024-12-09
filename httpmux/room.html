@@ -17,7 +17,7 @@
 <h1>
   <a
     href="#copy"
-    data-on-click="$clipboard(window.location.href);alert('Copied to clip board: '+ window.location.href)"
+    data-on-click="let link = window.location.protocol+'//{{ or .HostName GetLocalIP }}'+window.location.pathname; $clipboard(link);alert('Copied to clip board: '+ link)"
   >
     <svg
       fill="#000000"

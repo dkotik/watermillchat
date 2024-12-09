@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/dkotik/watermillchat"
 	"github.com/dkotik/watermillchat/httpmux"
+	"github.com/dkotik/watermillchat/ollama"
 	"github.com/urfave/cli/v3"
 )
 
@@ -21,10 +24,19 @@ func serve(ctx context.Context, address string) error {
 	// if err != nil {
 	// 	return fmt.Errorf("unable to set up history file: %w", err)
 	// }
-
-	mux, err := httpmux.New(
-	// httpmux.WithHistory(history),
+	chat, err := watermillchat.NewChat(
+	// 	httpmux.WithHistory(history),
 	)
+	if err != nil {
+		return err
+	}
+	bot := ollama.New("", "")
+	go bot.JoinChat(ctx, chat, "Ollama", "ollama")
+
+	mux, err := httpmux.New(httpmux.Configuration{
+		Chat:          chat,
+		Authenticator: httpmux.NaiveBearerHeaderAuthenticatorUnsafe,
+	})
 	if err != nil {
 		return err
 	}
@@ -51,7 +63,7 @@ func serve(ctx context.Context, address string) error {
 }
 
 func main() {
-	(&cli.Command{
+	err := (&cli.Command{
 		Name:  "wmcserver",
 		Usage: "run a live text chat server demonstration",
 		Action: func(ctx context.Context, c *cli.Command) error {
@@ -59,4 +71,8 @@ func main() {
 		},
 		Flags: flags(),
 	}).Run(context.Background(), os.Args)
+
+	if err != nil {
+		slog.Error("chat server shutdown", slog.Any("reason", err))
+	}
 }
