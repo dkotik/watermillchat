@@ -47,6 +47,9 @@ type RepositoryParameters struct {
 }
 
 func NewRepositoryUsingFile(f string, p RepositoryParameters) (*Repository, error) {
+	if p.Connection != nil {
+		return nil, errors.New("repository connection is already set")
+	}
 	db, err := sqlite.OpenConn(f, sqlite.OpenReadWrite|sqlite.OpenCreate)
 	if err != nil {
 		return nil, err
@@ -58,6 +61,7 @@ func NewRepositoryUsingFile(f string, p RepositoryParameters) (*Repository, erro
 			slog.Error("failed to close SQLite file", slog.Any("error", err))
 		}
 	}()
+	p.Connection = db
 	return NewRepository(p)
 }
 

@@ -14,10 +14,17 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var allowedRooms = []string{"test"}
-
 func serve(ctx context.Context, address string) error {
-	mux, err := httpmux.New()
+	// history, err := sqlitehistory.NewRepositoryUsingFile(
+	// 	filepath.Join(os.TempDir(), "wmcsever-demo.sqlite3"),
+	// )
+	// if err != nil {
+	// 	return fmt.Errorf("unable to set up history file: %w", err)
+	// }
+
+	mux, err := httpmux.New(
+	// httpmux.WithHistory(history),
+	)
 	if err != nil {
 		return err
 	}
@@ -50,12 +57,6 @@ func main() {
 		Action: func(ctx context.Context, c *cli.Command) error {
 			return serve(ctx, c.String("address"))
 		},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "address",
-				Value: "localhost:0",
-				Usage: "server address with port to listen on",
-			},
-		},
+		Flags: flags(),
 	}).Run(context.Background(), os.Args)
 }

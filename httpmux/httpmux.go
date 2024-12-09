@@ -6,6 +6,7 @@ package httpmux
 
 import (
 	"cmp"
+	"context"
 	_ "embed" // for media files and templates
 	"fmt"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/dkotik/watermillchat"
 	"github.com/dkotik/watermillchat/httpmux/hypermedia"
+	"github.com/dkotik/watermillchat/ollama"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/exp/rand"
 )
@@ -129,6 +131,9 @@ func New(withOptions ...Option) (mux *http.ServeMux, err error) {
 
 	// show a 404 page for everything else
 	mux.Handle(o.Prefix, notFound)
+
+	bot := ollama.New("", "")
+	go bot.JoinChat(context.Background(), chat, "Ollama", "ollama")
 
 	return mux, nil
 }

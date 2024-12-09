@@ -53,12 +53,23 @@ main {
   max-width: 60em;
 }
 
+main > h1 a {
+  text-decoration: none;
+}
+
+#github {
+  display: block;
+  float: right;
+  /* padding-right: 0.4em; */
+  max-width: 2em;
+}
+
 .messages {
   height: 50vh;
   overflow-x: none;
   overflow-y: scroll;
   border: 1px solid black;
-  border-radius: 4px;
+  border-radius: 4px 4px 0 0;
   background-color: rgba(36, 15, 54, 0.9);
 }
 
@@ -82,10 +93,20 @@ main {
   margin: 0;
 }
 
-form#message {
-  visibility: hidden;
+input#content {
+  display: block;
+  border-radius: 0 0 4px 4px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: rgb(150, 31, 109);
+  border: 2px solid black;
+  border-top: 0;
+  padding: 0.4em;
+  color: white;
+  font-size: 120%;
 }
 
-form#message.show {
-  visibility: visible;
+input#content:focus {
+  outline: none;
+  background-color: rgb(78, 31, 109);
 }

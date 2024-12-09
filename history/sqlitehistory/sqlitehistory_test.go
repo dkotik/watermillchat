@@ -13,6 +13,8 @@ import (
 func TestFileBacked(t *testing.T) {
 	history, err := sqlitehistory.NewRepositoryUsingFile(
 		filepath.Join(t.TempDir(), "test.sqlite3"), sqlitehistory.RepositoryParameters{})
+	// history, err := sqlitehistory.NewRepositoryUsingFile(
+	// 	filepath.Join("../../", "test.sqlite3"), sqlitehistory.RepositoryParameters{})
 	if err != nil {
 		t.Fatal(err)
 	}
