@@ -120,12 +120,12 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) {
 		return nil, err
 	}
 	if err = sqlitex.ExecuteTransient(r.db, `
-		CREATE INDEX wmc_room_name ON wmc_messages(room_name)
+		CREATE INDEX IF NOT EXISTS wmc_room_name ON wmc_messages(room_name)
 	`, nil); err != nil {
 		return nil, err
 	}
 	if err = sqlitex.ExecuteTransient(r.db, `
-		CREATE INDEX wmc_created_at ON wmc_messages(created_at)
+		CREATE INDEX IF NOT EXISTS wmc_created_at ON wmc_messages(created_at)
 	`, nil); err != nil {
 		return nil, err
 	}

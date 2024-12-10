@@ -11,14 +11,57 @@ import (
 )
 
 func TestFileBacked(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "test.sqlite3")
+	writeBroadcast := func(b watermillchat.Broadcast) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		history, err := sqlitehistory.NewRepositoryUsingFile(
+			target, sqlitehistory.RepositoryParameters{
+				Context: ctx,
+			})
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = history.Insert(ctx, b)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// open and close twice to make sure `IF NOT EXIST` did not clash
+	writeBroadcast(watermillchat.Broadcast{
+		Message: watermillchat.Message{
+			ID:      "test1",
+			Content: "test1",
+		}, RoomName: "test"})
+	writeBroadcast(watermillchat.Broadcast{
+		Message: watermillchat.Message{
+			ID:      "test2",
+			Content: "test2",
+		}, RoomName: "test"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 	history, err := sqlitehistory.NewRepositoryUsingFile(
-		filepath.Join(t.TempDir(), "test.sqlite3"), sqlitehistory.RepositoryParameters{})
-	// history, err := sqlitehistory.NewRepositoryUsingFile(
-	// 	filepath.Join("../../", "test.sqlite3"), sqlitehistory.RepositoryParameters{})
+		target, sqlitehistory.RepositoryParameters{
+			Context: ctx,
+		})
 	if err != nil {
 		t.Fatal(err)
 	}
-	testInsert(t, history)
+	messages, err := history.GetRoomMessages(ctx, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(messages) != 2 {
+		t.Fatal("unexpected number of messages")
+	}
+	if messages[0].ID != "test2" {
+		t.Fatal("returned message ID does not match the original")
+	}
+	if messages[1].ID != "test1" {
+		t.Fatal("returned message ID does not match the original")
+	}
 }
 
 func TestSQLiteConnection(t *testing.T) {

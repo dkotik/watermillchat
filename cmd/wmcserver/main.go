@@ -20,6 +20,9 @@ import (
 func serve(ctx context.Context, address string) error {
 	// history, err := sqlitehistory.NewRepositoryUsingFile(
 	// 	filepath.Join(os.TempDir(), "wmcsever-demo.sqlite3"),
+	// 	sqlitehistory.RepositoryParameters{
+	// 		Context: ctx,
+	// 	},
 	// )
 	// if err != nil {
 	// 	return fmt.Errorf("unable to set up history file: %w", err)
