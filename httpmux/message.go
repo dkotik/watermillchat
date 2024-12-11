@@ -43,6 +43,10 @@ func NewRoomMessagesHandler(
 			return
 		}
 		sse := datastar.NewSSE(w, r)
+		if err = sse.RemoveFragments("section.messages > .message"); err != nil {
+			eh.HandlerError(w, r, err)
+			return
+		}
 		b := &bytes.Buffer{}
 
 		for batch := range c.Subscribe(r.Context(), roomName) {

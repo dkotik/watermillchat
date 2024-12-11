@@ -9,33 +9,17 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/dkotik/watermillchat"
+	"github.com/dkotik/watermillchat/history/sqlitehistory"
 	"github.com/dkotik/watermillchat/httpmux"
 	"github.com/dkotik/watermillchat/ollama"
 	"github.com/urfave/cli/v3"
 )
 
-func serve(ctx context.Context, address string) error {
-	// history, err := sqlitehistory.NewRepositoryUsingFile(
-	// 	filepath.Join(os.TempDir(), "wmcsever-demo.sqlite3"),
-	// 	sqlitehistory.RepositoryParameters{
-	// 		Context: ctx,
-	// 	},
-	// )
-	// if err != nil {
-	// 	return fmt.Errorf("unable to set up history file: %w", err)
-	// }
-	chat, err := watermillchat.NewChat(
-	// watermillchat.WithHistoryRepository(history),
-	)
-	if err != nil {
-		return err
-	}
-	bot := ollama.New("", "")
-	go bot.JoinChat(ctx, chat, "Ollama", "ollama")
-
+func serve(ctx context.Context, address string, chat *watermillchat.Chat) error {
 	mux, err := httpmux.New(httpmux.Configuration{
 		Chat:          chat,
 		Authenticator: httpmux.NaiveBearerHeaderAuthenticatorUnsafe,
@@ -53,6 +37,7 @@ func serve(ctx context.Context, address string) error {
 	fmt.Printf("Launching chat server at: http://%s:%d/\n", at.IP, at.Port)
 
 	go func() {
+		// TODO: there is no grace timeout - use the version in oakmux
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
@@ -69,8 +54,28 @@ func main() {
 	err := (&cli.Command{
 		Name:  "wmcserver",
 		Usage: "run a live text chat server demonstration",
-		Action: func(ctx context.Context, c *cli.Command) error {
-			return serve(ctx, c.String("address"))
+		Action: func(ctx context.Context, c *cli.Command) (err error) {
+			configuration := watermillchat.Configuration{}
+			historyFile := strings.TrimSpace(c.String("history-file"))
+			if historyFile != "" {
+				history, err := sqlitehistory.NewRepositoryUsingFile(
+					historyFile,
+					sqlitehistory.RepositoryParameters{
+						Context: ctx,
+					},
+				)
+				if err != nil {
+					return fmt.Errorf("unable to set up history file: %w", err)
+				}
+				configuration.History.Repository = history
+			}
+			chat, err := watermillchat.New(ctx, configuration)
+			if err != nil {
+				return err
+			}
+			bot := ollama.New("", "")
+			go bot.JoinChat(ctx, chat, "Ollama", "ollama")
+			return serve(ctx, c.String("address"), chat)
 		},
 		Flags: flags(),
 	}).Run(context.Background(), os.Args)

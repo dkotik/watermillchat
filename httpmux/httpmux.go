@@ -73,7 +73,7 @@ func (c Configuration) Validate() (err error) {
 
 func New(c Configuration) (mux *http.ServeMux, err error) {
 	if c.Chat == nil {
-		c.Chat, err = watermillchat.NewChat()
+		c.Chat, err = watermillchat.New(context.Background(), watermillchat.Configuration{})
 		if err != nil {
 			return nil, err
 		}

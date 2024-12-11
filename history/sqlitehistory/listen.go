@@ -23,7 +23,7 @@ func (r *Repository) Listen(broadcasts <-chan *message.Message) {
 			continue
 		}
 		if err = r.Insert(context.TODO(), b); err != nil {
-			if err = r.Insert(context.TODO(), b); err != nil { // retryn
+			if err = r.Insert(context.TODO(), b); err != nil { // retry
 				slog.Error("failed to store broadcast message into SQLite database", slog.Any("error", err))
 			}
 		}

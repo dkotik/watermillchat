@@ -31,6 +31,8 @@ type RepositoryParameters struct {
 	Context    context.Context
 	Connection *sqlite.Conn
 
+	// TODO: replace below three parameters with watermillchat.HistoryConfiguration
+
 	// Retention constraints the life time of messages before deletion. Defaults to [watermillchat.DefaultHistoryRetention].
 	Retention time.Duration
 
@@ -65,7 +67,7 @@ func NewRepositoryUsingFile(f string, p RepositoryParameters) (*Repository, erro
 	return NewRepository(p)
 }
 
-func NewRepository(p RepositoryParameters) (r *Repository, err error) {
+func NewRepository(p RepositoryParameters) (r *Repository, err error) { // TODO: rename to New()
 	if p.Context == nil {
 		p.Context = context.Background()
 	}

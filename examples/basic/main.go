@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	chat, err := watermillchat.NewChat()
+	chat, err := watermillchat.New(context.Background(), watermillchat.Configuration{})
 	if err != nil {
 		panic(err)
 	}

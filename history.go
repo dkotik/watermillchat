@@ -2,16 +2,21 @@ package watermillchat
 
 import (
 	"context"
+
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 // History is a list of messages grouped by room name.
 // Must be sorted in ascending order by [Message.CreatedAt].
 // Apply to [Chat] using [WithHistory] option.
 type HistoryRepository interface {
+	Listen(broadcasts <-chan *message.Message)
 	GetRoomMessages(context.Context, string) ([]Message, error)
 }
 
 type VoidHistoryRepository struct{}
+
+func (r VoidHistoryRepository) Listen(broadcasts <-chan *message.Message) {}
 
 func (r VoidHistoryRepository) GetRoomMessages(ctx context.Context, roomName string) ([]Message, error) {
 	return nil, nil
