@@ -8,10 +8,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/delaneyj/gostar v0.8.0 h1:uT1JR+77P5ePL4BVTXsKNLtwUUtMAu/dNLryjEk95RA=
 github.com/delaneyj/gostar v0.8.0/go.mod h1:mlxRWAVbntRR2VWlpXAzt7y9HY+bQtEm/lsyFnGLx/w=
-github.com/dkotik/watermillchat v0.0.5 h1:EzWxTtA+MQHEquw0CZ4EenN1AENYwINdZxeyvdvG51w=
-github.com/dkotik/watermillchat v0.0.5/go.mod h1:muTqyIcgbLJYZryiaYhtJOkZs8Cu+MCaKFDPZDs9rI0=
-github.com/dkotik/watermillchat/history/sqlitehistory v0.0.4 h1:0zg31n9s/kPcFLr11foQrpoWPK/j+ARtXAx3DG/jdmg=
-github.com/dkotik/watermillchat/history/sqlitehistory v0.0.4/go.mod h1:jZ48KJJTvRCU3cLKb9zvkKVR3bEHGGGCmdZ/Pfvfaf4=
+github.com/dkotik/watermillchat v0.0.6 h1:DisE7uYELbRLju+ZKrfAW82btm+EcFEskk6Cz5NH6sg=
+github.com/dkotik/watermillchat v0.0.6/go.mod h1:muTqyIcgbLJYZryiaYhtJOkZs8Cu+MCaKFDPZDs9rI0=
+github.com/dkotik/watermillchat/history/sqlitehistory v0.0.5 h1:+QrGYzFyjPX7cavsYeszuVGdLtdbLS6u/FFQgY4SqHw=
+github.com/dkotik/watermillchat/history/sqlitehistory v0.0.5/go.mod h1:jZ48KJJTvRCU3cLKb9zvkKVR3bEHGGGCmdZ/Pfvfaf4=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/goccy/go-json v0.10.3 h1:KZ5WoDbxAIgm2HNbYckL0se1fHD6rz5j4ywS6ebzDqA=
