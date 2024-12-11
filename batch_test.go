@@ -11,7 +11,7 @@ import (
 func TestBatch(t *testing.T) {
 	items := make(chan int)
 	go func() {
-		for _ = range 100 {
+		for range 100 {
 			items <- 9
 			time.Sleep(time.Microsecond * time.Duration(rand.Intn(1000)))
 		}

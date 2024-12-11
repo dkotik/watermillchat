@@ -24,7 +24,7 @@ func TestRoom(t *testing.T) {
 
 	for batch := range messages {
 		for _, m := range batch {
-			t.Log("received message:", m)
+			t.Log("recieved message:", m)
 		}
 		if len(batch) == 0 {
 			t.Error("got an empty message batch")
