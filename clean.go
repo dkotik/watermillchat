@@ -8,10 +8,20 @@ import (
 	"time"
 )
 
+func (r *Room) cleanOut(cutoff int64, messageLimit int) {
+	r.mu.Lock()
+	r.messages = slices.DeleteFunc(r.messages, func(m Message) bool {
+		return m.CreatedAt < cutoff
+	})
+	if sliceOff := len(r.messages) - messageLimit; sliceOff > 0 {
+		r.messages = r.messages[sliceOff:]
+	}
+	r.mu.Unlock()
+}
+
 func (c *Chat) cleanup(ctx context.Context, frequency time.Duration) {
 	tick := time.NewTicker(frequency)
 	var t time.Time
-	var cutoff int64
 	var roomQueue []*Room
 	for {
 		select {
@@ -23,16 +33,8 @@ func (c *Chat) cleanup(ctx context.Context, frequency time.Duration) {
 			roomQueue = slices.Collect(maps.Values(c.rooms))
 			c.mu.Unlock()
 
-			cutoff = t.Add(-c.historyRetention).Unix()
 			for _, room := range roomQueue {
-				room.mu.Lock()
-				room.messages = slices.DeleteFunc(room.messages, func(m Message) bool {
-					return m.CreatedAt < cutoff
-				})
-				if sliceOff := len(room.messages) - c.historyDepth; sliceOff > 0 {
-					room.messages = room.messages[sliceOff:]
-				}
-				room.mu.Unlock()
+				room.cleanOut(t.Add(-c.historyRetention).Unix(), c.historyDepth)
 			}
 		}
 	}

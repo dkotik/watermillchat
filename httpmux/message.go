@@ -67,7 +67,7 @@ func NewRoomMessagesHandler(
 
 			if err = sse.MergeFragments(
 				b.String(),
-				datastar.WithSelector("#question"),
+				datastar.WithSelector(".messages"),
 				datastar.WithMergeAppend(),
 			); err != nil {
 				slog.DebugContext(r.Context(), "failed to deliver server sent event to the client", slog.Any("error", err))

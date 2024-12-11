@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/dkotik/watermillchat"
@@ -204,6 +205,6 @@ func (r *Repository) GetRoomMessages(ctx context.Context, roomName string) (mess
 	if err = r.stmtCollect.Reset(); err != nil {
 		return nil, err
 	}
-	// slices.Reverse(messages)
+	slices.Reverse(messages)
 	return messages, nil
 }

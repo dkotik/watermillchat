@@ -3,8 +3,8 @@ module main
 go 1.23.3
 
 require (
-	github.com/dkotik/watermillchat v0.0.4
-	github.com/dkotik/watermillchat/history/sqlitehistory v0.0.3
+	github.com/dkotik/watermillchat v0.0.5
+	github.com/dkotik/watermillchat/history/sqlitehistory v0.0.4
 	github.com/urfave/cli/v3 v3.0.0-beta1
 )
 

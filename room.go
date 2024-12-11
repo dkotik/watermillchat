@@ -22,6 +22,11 @@ func (r *Room) Send(ctx context.Context, m Message) error {
 		r.messages = r.messages[1:]
 	}
 	r.messages = append(r.messages, m)
+	// slog.Warn("added message to history",
+	// 	slog.String("messageID", m.ID),
+	// 	slog.String("content", m.Content),
+	// 	slog.Int("historySize", len(r.messages)),
+	// )
 	for _, client := range r.clients {
 		select {
 		case <-ctx.Done():
@@ -42,7 +47,7 @@ func (r *Room) Subscribe(ctx context.Context) <-chan []Message {
 
 	batches := make(chan []Message, cap(client)/2+1)
 	if len(history) > 0 {
-		slices.Reverse(history)
+		// slices.Reverse(history)
 		batches <- history
 	}
 

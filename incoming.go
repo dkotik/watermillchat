@@ -23,7 +23,8 @@ func (c *Chat) distributeToClients(ctx context.Context, roomName string, m Messa
 		if grow := c.historyDepth - len(history); grow > 0 {
 			history = slices.Grow(history, grow) // increase capacity
 		} else if grow < 0 {
-			history = history[-grow:] // truncate earlier messages
+			history = history[-grow:]      // truncate earlier messages
+			history = slices.Clip(history) // truncate capacity
 		}
 
 		room = &Room{
