@@ -22,10 +22,13 @@ func (o *Ollama) JoinChat(ctx context.Context, c *watermillchat.Chat, botName, r
 		ctx, cancel := context.WithTimeout(parent, time.Second*3)
 		defer cancel()
 
-		err := c.Send(ctx, roomName, watermillchat.Message{
-			Author:    me,
-			Content:   message,
-			CreatedAt: time.Now().Unix(),
+		err := c.Broadcast(ctx, watermillchat.Broadcast{
+			RoomName: roomName,
+			Message: watermillchat.Message{
+				Author:    me,
+				Content:   message,
+				CreatedAt: time.Now().Unix(),
+			},
 		})
 		if err != nil {
 			o.logger.ErrorContext(ctx, "Ollama was unable to speak a message", slog.String("roomName", roomName), slog.Any("identity", me))
@@ -63,7 +66,7 @@ func (o *Ollama) JoinChat(ctx context.Context, c *watermillchat.Chat, botName, r
 		answer, err := o.SendMessage(ctx, message.Content)
 		if err != nil {
 			send(ctx, fmt.Errorf("Ollama API Error: %w", err).Error())
-			<-time.After(time.Second * 10)
+			<-time.After(time.Second * 5)
 		} else {
 			send(ctx, answer)
 		}

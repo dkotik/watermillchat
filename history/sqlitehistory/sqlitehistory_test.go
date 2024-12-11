@@ -15,7 +15,7 @@ func TestFileBacked(t *testing.T) {
 	writeBroadcast := func(b watermillchat.Broadcast) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		history, err := sqlitehistory.NewRepositoryUsingFile(
+		history, err := sqlitehistory.NewUsingFile(
 			target, sqlitehistory.RepositoryParameters{
 				Context: ctx,
 			})
@@ -42,7 +42,7 @@ func TestFileBacked(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	history, err := sqlitehistory.NewRepositoryUsingFile(
+	history, err := sqlitehistory.NewUsingFile(
 		target, sqlitehistory.RepositoryParameters{
 			Context: ctx,
 		})
@@ -65,7 +65,7 @@ func TestFileBacked(t *testing.T) {
 }
 
 func TestSQLiteConnection(t *testing.T) {
-	history, err := sqlitehistory.NewRepository(sqlitehistory.RepositoryParameters{
+	history, err := sqlitehistory.New(sqlitehistory.RepositoryParameters{
 		MostMessagesPerRoom: 100,
 		Retention:           time.Minute,
 	})

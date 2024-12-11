@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -57,8 +58,14 @@ func main() {
 		Action: func(ctx context.Context, c *cli.Command) (err error) {
 			configuration := watermillchat.Configuration{}
 			historyFile := strings.TrimSpace(c.String("history-file"))
+			if strings.HasPrefix(historyFile, "temp://") && len(historyFile) > len("temp://") {
+				historyFile = filepath.Join(
+					os.TempDir(),
+					strings.TrimPrefix(historyFile, "temp://"),
+				)
+			}
 			if historyFile != "" {
-				history, err := sqlitehistory.NewRepositoryUsingFile(
+				history, err := sqlitehistory.NewUsingFile(
 					historyFile,
 					sqlitehistory.RepositoryParameters{
 						Context: ctx,

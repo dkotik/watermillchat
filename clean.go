@@ -19,14 +19,11 @@ func (c *Chat) cleanup(ctx context.Context, frequency time.Duration) {
 			return
 		case t = <-tick.C:
 			slog.Debug("cleaning up expiring messages")
-			cutoff = t.Add(-c.historyRetention).Unix()
-			if len(roomQueue) == 0 {
-				c.mu.Lock()
-				roomQueue = slices.Collect(maps.Values(c.rooms))
-				c.mu.Unlock()
-				time.Sleep(time.Second * 5)
-			}
+			c.mu.Lock()
+			roomQueue = slices.Collect(maps.Values(c.rooms))
+			c.mu.Unlock()
 
+			cutoff = t.Add(-c.historyRetention).Unix()
 			for _, room := range roomQueue {
 				room.mu.Lock()
 				room.messages = slices.DeleteFunc(room.messages, func(m Message) bool {
@@ -37,7 +34,6 @@ func (c *Chat) cleanup(ctx context.Context, frequency time.Duration) {
 				}
 				room.mu.Unlock()
 			}
-			roomQueue = roomQueue[:0]
 		}
 	}
 }

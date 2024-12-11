@@ -5,11 +5,9 @@ using a modern SQLite backend.
 package sqlitehistory
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"log/slog"
-	"slices"
 	"time"
 
 	"github.com/dkotik/watermillchat"
@@ -21,6 +19,7 @@ type Repository struct {
 	db                  *sqlite.Conn
 	mostMessagesPerRoom int64
 	retention           time.Duration
+	logger              *slog.Logger
 
 	stmtInsert  *sqlite.Stmt
 	stmtCollect *sqlite.Stmt
@@ -46,9 +45,19 @@ type RepositoryParameters struct {
 	// be present in the database, if they retention duration
 	// has not yet run out. Defaults to [watermillchat.DefaultHistoryDepth].
 	MostMessagesPerRoom int64
+
+	// Logger reports any problems associated with delivery.
+	// Defaults to [slog.Default].
+	Logger *slog.Logger
 }
 
-func NewRepositoryUsingFile(f string, p RepositoryParameters) (*Repository, error) {
+func NewUsingFile(f string, p RepositoryParameters) (*Repository, error) {
+	if p.Logger == nil {
+		p.Logger = slog.Default()
+	}
+	if p.Context == nil {
+		p.Context = context.Background()
+	}
 	if p.Connection != nil {
 		return nil, errors.New("repository connection is already set")
 	}
@@ -56,18 +65,20 @@ func NewRepositoryUsingFile(f string, p RepositoryParameters) (*Repository, erro
 	if err != nil {
 		return nil, err
 	}
-	ctx := cmp.Or(p.Context, context.Background())
-	go func() {
+	go func(ctx context.Context, logger *slog.Logger) {
 		<-ctx.Done()
 		if err := db.Close(); err != nil {
 			slog.Error("failed to close SQLite file", slog.Any("error", err))
 		}
-	}()
+	}(p.Context, p.Logger)
 	p.Connection = db
-	return NewRepository(p)
+	return New(p)
 }
 
-func NewRepository(p RepositoryParameters) (r *Repository, err error) { // TODO: rename to New()
+func New(p RepositoryParameters) (r *Repository, err error) {
+	if p.Logger == nil {
+		p.Logger = slog.Default()
+	}
 	if p.Context == nil {
 		p.Context = context.Background()
 	}
@@ -76,12 +87,12 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) { // TODO:
 		if err != nil {
 			return nil, err
 		}
-		go func() {
-			<-p.Context.Done()
+		go func(ctx context.Context, logger *slog.Logger) {
+			<-ctx.Done()
 			if err = p.Connection.Close(); err != nil {
-				slog.Error("failed to close SQLite file", slog.Any("error", err))
+				logger.Error("failed to close SQLite file", slog.Any("error", err))
 			}
-		}()
+		}(p.Context, p.Logger)
 	}
 	if p.Retention < time.Minute {
 		if p.Retention != 0 {
@@ -106,6 +117,7 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) { // TODO:
 		db:                  p.Connection,
 		mostMessagesPerRoom: p.MostMessagesPerRoom,
 		retention:           p.Retention,
+		logger:              p.Logger,
 	}
 
 	if err = sqlitex.ExecuteTransient(r.db, `
@@ -165,20 +177,6 @@ func NewRepository(p RepositoryParameters) (r *Repository, err error) { // TODO:
 	return r, nil
 }
 
-func (r *Repository) Insert(ctx context.Context, m watermillchat.Broadcast) (err error) {
-	r.stmtInsert.BindText(1, m.ID)
-	r.stmtInsert.BindText(2, m.RoomName)
-	if m.Author != nil {
-		r.stmtInsert.BindText(3, m.Author.ID)
-		r.stmtInsert.BindText(4, m.Author.Name)
-	}
-	r.stmtInsert.BindText(5, m.Content)
-	r.stmtInsert.BindInt64(6, m.CreatedAt)
-	r.stmtInsert.BindInt64(7, m.UpdatedAt)
-	_, err = r.stmtInsert.Step()
-	return errors.Join(err, r.stmtInsert.Reset())
-}
-
 func (r *Repository) GetRoomMessages(ctx context.Context, roomName string) (messages []watermillchat.Message, err error) {
 	r.stmtCollect.BindText(1, roomName)
 	r.stmtCollect.BindInt64(2, r.mostMessagesPerRoom)
@@ -206,6 +204,6 @@ func (r *Repository) GetRoomMessages(ctx context.Context, roomName string) (mess
 	if err = r.stmtCollect.Reset(); err != nil {
 		return nil, err
 	}
-	slices.Reverse(messages)
+	// slices.Reverse(messages)
 	return messages, nil
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/dkotik/watermillchat"
@@ -92,13 +93,24 @@ func NewMessageSendHandler(
 			eh.HandlerError(w, r, hypermedia.ErrForbidden)
 			return
 		}
-		m := watermillchat.Message{
-			ID:      watermill.NewULID(),
-			Author:  &identity,
-			Content: strings.TrimSpace(r.FormValue("content")),
+		roomName := r.FormValue("roomName")
+		if roomName == "" {
+			eh.HandlerError(w, r, hypermedia.ErrNotFound)
+			return
 		}
 
-		err := c.Send(r.Context(), r.FormValue("roomName"), m)
+		m := watermillchat.Message{
+			ID:        watermill.NewULID(),
+			Author:    &identity,
+			Content:   strings.TrimSpace(r.FormValue("content")),
+			CreatedAt: time.Now().Unix(),
+		}
+
+		// err := c.Send(r.Context(), r.FormValue("roomName"), m)
+		err := c.Broadcast(r.Context(), watermillchat.Broadcast{
+			RoomName: roomName,
+			Message:  m,
+		})
 		if err != nil {
 			eh.HandlerError(w, r, err)
 		}

@@ -12,15 +12,17 @@ func main() {
 		panic(err)
 	}
 
-	if err = chat.Send(
+	if err = chat.Broadcast(
 		context.Background(),
-		"testRoom",
-		watermillchat.Message{
-			Author: &watermillchat.Identity{
-				ID:   "test",
-				Name: "test user",
+		watermillchat.Broadcast{
+			RoomName: "testRoom",
+			Message: watermillchat.Message{
+				Author: &watermillchat.Identity{
+					ID:   "test",
+					Name: "test user",
+				},
+				Content: "test message contents",
 			},
-			Content: "test message contents",
 		},
 	); err != nil {
 		panic(err)
